@@ -5,7 +5,7 @@ Designed for multi-tenant SaaS applications with TDD from the ground up.
 
 ## 🛠️ Tech Stack
 
-- **Ruby** 3.3.4
+- **Ruby** 3.3.10
 - **Rails** 8.1.3 (API mode)
 - **PostgreSQL** 17
 - **Docker** + Docker Compose
@@ -180,6 +180,43 @@ rm -rf .git
 git init
 git add .
 git commit -m "Initial commit from boilerplate"
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+Every push to `main` and pull request runs the following automated checks via GitHub Actions:
+
+### Jobs
+
+| Job         | Tool     | Purpose                                            |
+| ----------- | -------- | -------------------------------------------------- |
+| `scan_ruby` | Brakeman | Static analysis for Rails security vulnerabilities |
+| `lint`      | RuboCop  | Code style and consistency enforcement             |
+| `test`      | RSpec    | Full test suite against PostgreSQL 17              |
+
+### Flow
+
+```
+scan_ruby ──┐
+            ├──► test
+lint ───────┘
+```
+
+Tests only run if security scan and lint pass first.
+
+### Running checks locally
+
+```bash
+# Security scan
+bin/brakeman --no-pager
+
+# Lint
+bin/rubocop
+
+# Tests
+docker compose run test
 ```
 
 ---
