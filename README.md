@@ -7,7 +7,7 @@ Designed for multi-tenant SaaS applications with TDD from the ground up.
 
 - **Ruby** 3.3.4
 - **Rails** 8.1.3 (API mode)
-- **PostgreSQL** 16
+- **PostgreSQL** 17
 - **Docker** + Docker Compose
 - **RSpec** + FactoryBot + Faker
 - **JWT** + BCrypt (Authentication)
