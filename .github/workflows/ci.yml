@@ -48,4 +48,22 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost/saas_test
+          RAILS_ENV: test
+        run: bin/rails db:create db:migrate
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost/saas_test
+          RAILS_ENV: test
+          SECRET_KEY_BASE: thisisafakesecretforcionly1234567890
+        run: bundle exec rspec
