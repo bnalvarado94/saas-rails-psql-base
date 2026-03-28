@@ -1,14 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   db:
     image: postgres:17-alpine
     volumes:
@@ -35,29 +25,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}
       RAILS_ENV: ${RAILS_ENV}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      REDIS_URL: redis://redis:6379/0
-
-  sidekiq:
-    build: .
-    command: bundle exec sidekiq
-    volumes:
-      - .:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}
-      RAILS_ENV: ${RAILS_ENV}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      REDIS_URL: redis://redis:6379/0
 
   test:
     build: .
