@@ -1,6 +1,6 @@
 # 🚀 SaaS Rails Boilerplate
 
-A production-ready API boilerplate built with Ruby on Rails 8, PostgreSQL, and Docker.
+A production-ready API boilerplate built with Ruby on Rails 8, PostgreSQL 17, and Docker.
 Designed for multi-tenant SaaS applications with TDD from the ground up.
 
 ## 🛠️ Tech Stack
@@ -9,9 +9,13 @@ Designed for multi-tenant SaaS applications with TDD from the ground up.
 - **Rails** 8.1.3 (API mode)
 - **PostgreSQL** 17
 - **Docker** + Docker Compose
+- **Solid Queue** (background jobs — Rails 8 native, no Redis required)
+- **Strong Migrations** (safe migrations in production)
 - **RSpec** + FactoryBot + Faker
 - **JWT** + BCrypt (Authentication)
 - **JSONAPI Serializer**
+- **Brakeman** (security scanning)
+- **RuboCop** (code style)
 
 ---
 
@@ -88,6 +92,18 @@ docker compose run test bundle exec rspec --format documentation
 
 ---
 
+## ⚙️ Background Jobs
+
+This boilerplate uses **Solid Queue** — Rails 8's native job backend powered by PostgreSQL. No Redis required.
+
+```bash
+# Jobs run automatically with the web server in development
+# To run manually:
+docker compose exec web bin/jobs
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -96,6 +112,7 @@ app/
 │   └── api/
 │       └── v1/          # Versioned API controllers
 ├── models/              # ActiveRecord models
+├── jobs/                # Solid Queue background jobs
 ├── services/            # Service Objects (business logic)
 └── serializers/         # JSONAPI serializers
 
@@ -125,6 +142,32 @@ Authorization: Bearer <token>
 
 ---
 
+## 🔒 Security
+
+**Brakeman** runs on every push via CI to catch common Rails security vulnerabilities.
+
+```bash
+bin/brakeman --no-pager
+```
+
+**Strong Migrations** prevents dangerous migrations that could cause downtime in production.
+
+---
+
+## 🎨 Code Style
+
+**RuboCop** enforces consistent code style across the project.
+
+```bash
+# Check
+bin/rubocop
+
+# Auto-fix
+bin/rubocop -a
+```
+
+---
+
 ## 🐳 Docker Commands
 
 ```bash
@@ -137,8 +180,8 @@ docker compose exec web rails console
 # Run a migration
 docker compose exec web rails db:migrate
 
-# Open a bash shell
-docker compose exec web bash
+# Open a shell
+docker compose exec web sh
 
 # Stop all containers
 docker compose down
@@ -159,11 +202,6 @@ This boilerplate follows strict Test-Driven Development:
 🔴 Red    → Write a failing spec first
 🟢 Green  → Write the minimum code to make it pass
 🔵 Refactor → Clean up without breaking tests
-```
-
-```bash
-# Watch mode (run tests on file change)
-docker compose run test bundle exec rspec --watch
 ```
 
 ---
