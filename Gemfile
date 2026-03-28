@@ -5,6 +5,9 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem "strong_migrations"
+gem "sidekiq"
+gem "redis", ">= 4.0"
 
 # Auth
 gem "jwt"
