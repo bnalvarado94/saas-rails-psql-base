@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Purpose: Start all development services (web + worker + db) via Docker Compose.
+
+set -e
+
+if ! command -v docker compose &> /dev/null; then
+  echo "Error: docker compose is required. Install Docker Desktop or the compose plugin."
+  exit 1
+fi
+
+echo "Starting development environment..."
+docker compose up --build "$@"

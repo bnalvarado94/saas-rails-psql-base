@@ -1,0 +1,9 @@
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+/usr/local/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260329-10-h5sweq sitelibdir\=./.gem.20260329-10-h5sweq clean
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/racc-1.8.1/ext/racc/cparse
+make DESTDIR\= sitearchdir\=./.gem.20260329-10-h5sweq sitelibdir\=./.gem.20260329-10-h5sweq
+make failedNo such file or directory - make

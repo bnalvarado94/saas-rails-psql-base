@@ -8,6 +8,10 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "strong_migrations"
 gem "solid_queue"
 
+# Security / middleware
+gem "rack-cors"
+gem "rack-attack"
+
 # Auth
 gem "jwt"
 gem "bcrypt", "~> 3.1.7"
@@ -22,10 +26,12 @@ group :development, :test do
   gem "pry"
   gem "debug", platforms: %i[ mri windows ]
   gem "brakeman", require: false
+  gem "bundler-audit", require: false
   gem "rubocop-rails-omakase", require: false
 end
 
 group :test do
   gem "shoulda-matchers"
   gem "database_cleaner-active_record"
+  gem "simplecov", require: false
 end

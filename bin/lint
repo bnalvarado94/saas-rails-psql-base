@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Purpose: Run RuboCop with safe auto-correct.
+# Usage: bin/lint [extra rubocop args]
+
+set -e
+
+bundle exec rubocop -a "$@"

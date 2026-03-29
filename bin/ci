@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Purpose: Run the full local CI pipeline — mirrors what GitHub Actions does.
+# Usage: bin/ci
+
+set -e
+
+echo "=== Step 1/4: Lint (RuboCop) ==="
+bundle exec rubocop
+
+echo ""
+echo "=== Step 2/4: Security scan (Brakeman) ==="
+bundle exec brakeman --no-pager -q
+
+echo ""
+echo "=== Step 3/4: Dependency audit ==="
+bundle exec bundle-audit check --update
+
+echo ""
+echo "=== Step 4/4: Tests with coverage ==="
+bundle exec rspec --require rails_helper
+
+echo ""
+echo "=== CI passed! ==="

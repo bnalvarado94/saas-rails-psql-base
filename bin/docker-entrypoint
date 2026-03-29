@@ -1,13 +1,23 @@
 #!/bin/bash -e
 
-# Enable jemalloc for reduced memory usage and latency.
-if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
-  export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
-fi
+# Purpose: Docker entrypoint for both production and development containers.
+# Order matters: gems must be present before Rails (db:prepare) loads.
 
-# If running the rails server then create or migrate existing database
-if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
-  ./bin/rails db:prepare
-fi
+# Remove stale server PID file (common after unclean container shutdown)
+rm -f tmp/pids/server.pid
+
+# Run db:prepare before starting any Rails process.
+# db:prepare is idempotent: creates DB if missing, runs pending migrations.
+./bin/rails db:prepare
+
+# Load the Solid Queue schema if its tables don't exist yet.
+# db/queue_schema.rb is a separate schema file (not loaded by db:prepare).
+# The table_exists? guard makes this idempotent across restarts.
+./bin/rails runner "
+  unless ActiveRecord::Base.connection.table_exists?('solid_queue_jobs')
+    puts 'Loading Solid Queue schema...'
+    load Rails.root.join('db/queue_schema.rb').to_s
+  end
+"
 
 exec "${@}"

@@ -1,2 +1,28 @@
+# Purpose: RuboCop configuration — extends rubocop-rails-omakase with project-specific overrides.
+
 inherit_gem:
   rubocop-rails-omakase: rubocop.yml
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "db/queue_schema.rb"
+    - "vendor/**/*"
+    - "node_modules/**/*"
+
+# No need to document every class in an API boilerplate
+Style/Documentation:
+  Enabled: false
+
+# 20 lines is a reasonable limit for service objects and controllers
+Metrics/MethodLength:
+  Max: 20
+
+# Allow longer blocks in specs and config files
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "config/**/*"
+    - "lib/tasks/**/*"

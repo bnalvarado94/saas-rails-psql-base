@@ -1,0 +1,9 @@
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/bcrypt-3.1.22/ext/mri
+/usr/local/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/bcrypt-3.1.22/ext/mri
+make DESTDIR\= sitearchdir\=./.gem.20260329-10-ec4eo sitelibdir\=./.gem.20260329-10-ec4eo clean
+current directory: /app/vendor/bundle/ruby/3.3.0/gems/bcrypt-3.1.22/ext/mri
+make DESTDIR\= sitearchdir\=./.gem.20260329-10-ec4eo sitelibdir\=./.gem.20260329-10-ec4eo
+make failedNo such file or directory - make

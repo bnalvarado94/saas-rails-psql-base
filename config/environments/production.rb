@@ -65,7 +65,9 @@ Rails.application.configure do
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
+  # Solid Queue uses the primary DB. To use a separate queue DB, add a `queue:`
+  # entry in database.yml and change :primary to :queue here.
+  config.solid_queue.connects_to = { database: { writing: :primary } }
   # config.active_job.queue_name_prefix = "saas_rails_psql_base_production"
 
   # Disable caching for Action Mailer templates even if Action Controller

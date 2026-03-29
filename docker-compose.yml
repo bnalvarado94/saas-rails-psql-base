@@ -1,3 +1,12 @@
+# Purpose: Development-oriented Docker Compose setup.
+# Includes web server, background worker, and test runner.
+# For production, use the Dockerfile directly or a container orchestrator.
+#
+# Gems are pre-built into the image by the builder stage.
+# If you change the Gemfile, run: docker compose build
+#
+# Dev builds pass BUNDLE_WITHOUT="" so all gems (including dev/test) are installed.
+
 services:
   db:
     image: postgres:17-alpine
@@ -16,8 +25,11 @@ services:
       retries: 5
 
   web:
-    build: .
-    command: sh -c "rm -f tmp/pids/server.pid && rails server -b 0.0.0.0"
+    build:
+      context: .
+      args:
+        # Install ALL gems in dev so rspec/rubocop/etc. are available in the container
+        BUNDLE_WITHOUT: ""
     volumes:
       - .:/app
     ports:
@@ -27,12 +39,45 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}
-      RAILS_ENV: ${RAILS_ENV}
+      RAILS_ENV: ${RAILS_ENV:-development}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_LOG_TO_STDOUT: "true"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/up || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      args:
+        BUNDLE_WITHOUT: ""
+    command: ["bundle", "exec", "rake", "solid_queue:start"]
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}
+      RAILS_ENV: ${RAILS_ENV:-development}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_LOG_TO_STDOUT: "true"
 
   test:
-    build: .
-    command: bundle exec rspec
+    build:
+      context: .
+      args:
+        BUNDLE_WITHOUT: ""
+    command: ["bundle", "exec", "rspec"]
+    profiles:
+      - test
     volumes:
       - .:/app
     depends_on:
@@ -41,6 +86,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}_test
       RAILS_ENV: test
+      SECRET_KEY_BASE: test_secret_key_base_not_for_production
 
 volumes:
   postgres_data:

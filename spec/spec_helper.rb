@@ -1,13 +1,33 @@
-require 'database_cleaner/active_record'
+# Purpose: RSpec configuration — loaded before Rails environment.
+# SimpleCov must be required first to track coverage accurately.
+
+require "simplecov"
+SimpleCov.start "rails" do
+  add_filter "/spec/"
+  add_filter "/config/"
+  add_filter "/vendor/"
+
+  add_group "Controllers", "app/controllers"
+  add_group "Models", "app/models"
+  add_group "Services", "app/services"
+  add_group "Serializers", "app/serializers"
+  add_group "Jobs", "app/jobs"
+  add_group "Mailers", "app/mailers"
+
+  # Only enforce coverage threshold in CI (set COVERAGE_MINIMUM env var to enable)
+  minimum_coverage ENV["COVERAGE_MINIMUM"].to_i if ENV["COVERAGE_MINIMUM"]
+end
 
 RSpec.configure do |config|
-  config.before(:suite) do
-    DatabaseCleaner.allow_remote_database_url = true
-    DatabaseCleaner.strategy = :transaction
-    DatabaseCleaner.clean_with(:truncation)
+  config.expect_with :rspec do |expectations|
+    expectations.include_chain_clauses_in_custom_matcher_descriptions = true
   end
 
-  config.around(:each) do |example|
-    DatabaseCleaner.cleaning { example.run }
+  config.mock_with :rspec do |mocks|
+    mocks.verify_partial_doubles = true
   end
+
+  config.shared_context_metadata_behavior = :apply_to_host_groups
+  config.order = :random
+  Kernel.srand config.seed
 end

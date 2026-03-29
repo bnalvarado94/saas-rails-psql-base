@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Purpose: Run RSpec test suite with coverage report.
+# Usage: bin/test [extra rspec args]
+
+set -e
+
+bundle exec rspec --require rails_helper "$@"
