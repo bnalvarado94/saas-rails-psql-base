@@ -53,8 +53,7 @@ RUN JEMALLOC_PATH=$(find /usr/lib -name "libjemalloc.so.2" 2>/dev/null | head -1
     if [ -n "$JEMALLOC_PATH" ]; then echo "LD_PRELOAD=$JEMALLOC_PATH" >> /etc/environment; fi
 
 ENV RAILS_ENV=production \
-    RAILS_LOG_TO_STDOUT=true \
-    BUNDLE_WITHOUT="development test"
+    RAILS_LOG_TO_STDOUT=true
 
 WORKDIR /app
 

@@ -1,13 +1,17 @@
-# Purpose: Encode and decode JWT tokens for API authentication.
-# Uses HS256 algorithm with JWT_SECRET env var.
-# Default expiration: 24 hours (configurable via JWT_EXPIRATION_HOURS).
+# Purpose: Encode and decode JWT access tokens for API authentication.
+# Uses HS256 with JWT_SECRET env var (required in production).
+# Default expiration: 15 minutes — intentionally short because JWTs cannot be revoked.
 
 class JwtService
   ALGORITHM = "HS256"
+  DEFAULT_TTL = 15.minutes
 
   def self.encode(payload, exp: nil)
-    exp ||= ENV.fetch("JWT_EXPIRATION_HOURS", 24).to_i.hours.from_now
-    payload[:exp] = exp.to_i
+    exp ||= DEFAULT_TTL.from_now
+    payload = payload.merge(
+      exp: exp.to_i,
+      jti: SecureRandom.uuid
+    )
     JWT.encode(payload, secret_key, ALGORITHM)
   end
 
@@ -17,6 +21,9 @@ class JwtService
   end
 
   def self.secret_key
-    ENV.fetch("JWT_SECRET") { Rails.application.secret_key_base }
+    ENV.fetch("JWT_SECRET") do
+      raise KeyError, "JWT_SECRET env var is required in production" if Rails.env.production?
+      Rails.application.secret_key_base
+    end
   end
 end

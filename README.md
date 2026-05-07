@@ -373,10 +373,12 @@ The Dockerfile uses a **multi-stage build**:
 | `test`   | RSpec test runner (profile: `test`)  |
 
 ```bash
-bin/dev                                # Start web + worker + db
-docker compose run --rm test           # Run test suite
-docker compose build                   # Rebuild after Gemfile changes
-docker compose down -v                 # Stop and remove volumes
+bin/dev                                           # Start web + worker + db
+docker compose run --rm test                      # Run RSpec test suite
+docker compose run --rm web bundle exec rubocop   # Run RuboCop linter
+docker compose run --rm web bundle exec brakeman  # Run Brakeman security scan
+docker compose build                              # Rebuild after Gemfile changes
+docker compose down -v                            # Stop and remove volumes
 ```
 
 ---

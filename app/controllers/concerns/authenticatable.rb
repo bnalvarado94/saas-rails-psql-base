@@ -18,8 +18,9 @@ module Authenticatable
 
     decoded = JwtService.decode(token)
     @current_user = User.find(decoded[:user_id])
-  rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound => e
-    render json: { error: "Unauthorized: #{e.message}" }, status: :unauthorized
+  rescue ActiveRecord::RecordNotFound
+    # User deleted after token was issued — treat as unauthorized, not 404.
+    render json: { error: "Unauthorized" }, status: :unauthorized
   end
 
   def current_user
