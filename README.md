@@ -16,6 +16,10 @@ Production-ready Rails 8 API boilerplate for building SaaS products. Includes JW
 | Background Jobs   | Solid Queue (Rails 8 native — no Redis required)                |
 | Authentication    | JWT + BCrypt (custom, no Devise)                                |
 | Serialization     | jsonapi-serializer                                              |
+| Authorization     | Pundit (policy objects)                                         |
+| Pagination        | Pagy (limit 25, max 100)                                        |
+| Full-text Search  | pg_search (PostgreSQL native, tsearch)                          |
+| Audit Trail       | PaperTrail (change history for ActiveRecord models)             |
 | Rate Limiting     | Rack::Attack                                                    |
 | CORS              | rack-cors                                                       |
 | Migration Safety  | strong_migrations                                               |
@@ -78,7 +82,6 @@ bin/rails server   # Start the web server on port 3000
 | `POSTGRES_PASSWORD`    | Yes\*    | `password`                      | DB password (used by Docker Compose).                        |
 | `POSTGRES_DB`          | Yes\*    | —                               | DB name (used by Docker Compose).                            |
 | `JWT_SECRET`           | No       | Falls back to `SECRET_KEY_BASE` | Secret for signing JWT tokens. Set explicitly in production. |
-| `JWT_EXPIRATION_HOURS` | No       | `24`                            | JWT token lifetime in hours.                                 |
 | `ALLOWED_ORIGINS`      | No       | `http://localhost:3000`         | CORS-allowed origins, comma-separated.                       |
 | `RACK_ATTACK_LIMIT`    | No       | `300`                           | Max requests per IP per 5 minutes.                           |
 | `WEB_CONCURRENCY`      | No       | `2`                             | Puma worker processes (production only).                     |
@@ -94,47 +97,68 @@ _Use either `DATABASE_URL` **or** the `POSTGRES\__` variables — not both.
 ```
 app/
 ├── controllers/
-│   ├── application_controller.rb         # Thin base — inherits ActionController::API
+│   ├── application_controller.rb              # Thin base — inherits ActionController::API
 │   ├── concerns/
-│   │   ├── authenticatable.rb            # JWT auth — include in controllers that require login
-│   │   └── error_handler.rb              # Centralized rescue_from for consistent JSON errors
+│   │   ├── authenticatable.rb                 # JWT auth — include in controllers that require login
+│   │   └── error_handler.rb                   # Centralized rescue_from for consistent JSON errors
 │   └── api/
 │       └── v1/
-│           └── base_controller.rb        # Base for all v1 endpoints — includes both concerns
-├── services/
-│   ├── application_service.rb            # Base service object with .call() class method
-│   └── jwt_service.rb                    # JWT encode/decode with configurable expiration
-├── serializers/
-│   └── base_serializer.rb                # jsonapi-serializer base with underscore key transform
+│           ├── base_controller.rb             # Base for all v1 endpoints — includes both concerns
+│           └── auth/
+│               └── sessions_controller.rb     # login / refresh / logout endpoints
 ├── models/
-│   └── application_record.rb
+│   ├── application_record.rb
+│   ├── user.rb                                # Email + BCrypt password, refresh_tokens association
+│   └── refresh_token.rb                       # Rotating refresh tokens with family-based theft detection
+├── policies/
+│   └── application_policy.rb                  # Pundit base policy — all actions deny by default
+├── services/
+│   ├── application_service.rb                 # Base service object with .call() class method
+│   ├── jwt_service.rb                         # JWT encode/decode, 15-minute TTL, HS256
+│   └── auth/
+│       ├── login_service.rb                   # Validates credentials, issues access + refresh tokens
+│       ├── refresh_service.rb                 # Rotates refresh token, detects reuse/theft
+│       └── logout_service.rb                  # Revokes entire refresh token family
+├── serializers/
+│   └── base_serializer.rb                     # jsonapi-serializer base with underscore key transform
 ├── jobs/
-│   └── application_job.rb                # Solid Queue adapter configured
+│   └── application_job.rb                     # Solid Queue adapter configured
 └── mailers/
     └── application_mailer.rb
 
 config/
 ├── initializers/
-│   ├── cors.rb                           # CORS — configured via ALLOWED_ORIGINS env var
-│   ├── rack_attack.rb                    # Rate limiting — IP throttle + login endpoint throttle
-│   ├── filter_parameter_logging.rb       # Scrubs passwords, tokens, API keys from logs
-│   ├── generators.rb                     # Rails generators default to RSpec + FactoryBot
-│   ├── json_encoding.rb                  # ISO 8601 datetime format for all JSON responses
-│   └── strong_migrations.rb              # Prevents unsafe migrations on PostgreSQL 17
+│   ├── cors.rb                                # CORS — configured via ALLOWED_ORIGINS env var
+│   ├── rack_attack.rb                         # Rate limiting — IP throttle + login endpoint throttle
+│   ├── filter_parameter_logging.rb            # Scrubs passwords, tokens, API keys from logs
+│   ├── generators.rb                          # Rails generators default to RSpec + FactoryBot
+│   ├── json_encoding.rb                       # ISO 8601 datetime format for all JSON responses
+│   ├── pagy.rb                                # Pagination defaults (limit: 25, max: 100)
+│   ├── pg_search.rb                           # Full-text search — tsearch with English dictionary
+│   └── strong_migrations.rb                   # Prevents unsafe migrations on PostgreSQL 17
 ├── environments/
 │   ├── development.rb
 │   ├── test.rb
-│   └── production.rb                     # Log tags, request IDs, production hardening
-├── puma.rb                               # WEB_CONCURRENCY workers + preload_app! in production
-├── queue.yml                             # Solid Queue configuration
-└── recurring.yml                         # Solid Queue recurring job schedule (empty template)
+│   └── production.rb                          # Log tags, request IDs, production hardening
+├── puma.rb                                    # WEB_CONCURRENCY workers + preload_app! in production
+├── queue.yml                                  # Solid Queue configuration
+└── recurring.yml                              # Solid Queue recurring job schedule (empty template)
 
 spec/
-├── support/
-│   ├── database_cleaner.rb               # Transaction strategy + deletion for feature/system specs
-│   └── request_helpers.rb                # json_response + auth_headers(user) helpers
-└── requests/
-    └── health_spec.rb                    # /up smoke test
+├── factories/
+│   ├── users.rb
+│   └── refresh_tokens.rb
+├── models/
+│   ├── user_spec.rb
+│   └── refresh_token_spec.rb
+├── requests/
+│   ├── health_spec.rb                         # /up smoke test
+│   └── api/v1/auth/
+│       └── sessions_spec.rb                   # login / refresh / logout request specs
+└── support/
+    ├── database_cleaner.rb                    # Transaction strategy + deletion for feature/system specs
+    ├── request_helpers.rb                     # json_response + auth_headers(user) helpers
+    └── vcr.rb                                 # VCR cassette configuration for HTTP stubs
 
 bin/
 ├── dev                                   # Start all services via Docker Compose
@@ -148,15 +172,43 @@ bin/
 
 ## Authentication
 
-JWT-based authentication with a custom implementation (no Devise, no sessions).
+JWT + rotating refresh token authentication with a custom implementation (no Devise, no sessions).
 
 **How it works:**
 
-1. Generate a token using `JwtService.encode(user_id: user.id)`
-2. Client includes the token in the `Authorization` header
-3. `Authenticatable` concern decodes it and sets `@current_user` before the action runs
+1. Client calls `POST /api/v1/auth/login` with email and password
+2. Server returns a short-lived **access token** (JWT, 15 min) in the response body and a **refresh token** in an HttpOnly cookie
+3. Client includes the access token in the `Authorization: Bearer <token>` header for protected requests
+4. When the access token expires, client calls `POST /api/v1/auth/refresh` — the server rotates the refresh token and issues a new access token
+5. On logout, `DELETE /api/v1/auth/logout` revokes the entire refresh token family
 
-**Include in a controller:**
+**Auth endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/auth/login` | Authenticate and receive tokens |
+| `POST` | `/api/v1/auth/refresh` | Rotate refresh token and get a new access token |
+| `DELETE` | `/api/v1/auth/logout` | Revoke all refresh tokens for the session |
+
+**Login response:**
+
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "Bearer",
+  "expires_in": 900,
+  "user": { "id": 1, "email": "...", "first_name": "...", "last_name": "..." }
+}
+```
+
+**Refresh token security:**
+
+- Tokens are stored as SHA-256 digests — raw value is never persisted
+- Each use rotates the token (old token is marked `used_at`)
+- Reuse of a consumed token triggers **family revocation** (theft detection)
+- Tokens carry `ip_address` and `user_agent` for audit purposes
+
+**Include auth in a controller:**
 
 ```ruby
 class Api::V1::PostsController < Api::V1::BaseController
@@ -172,18 +224,10 @@ end
 **Skip auth for a specific action:**
 
 ```ruby
-class Api::V1::AuthController < Api::V1::BaseController
-  skip_before_action :authenticate_request!, only: [:login, :register]
+class Api::V1::SomeController < Api::V1::BaseController
+  skip_before_action :authenticate_request!, only: [:public_action]
 end
 ```
-
-**Token format:**
-
-```
-Authorization: Bearer <token>
-```
-
-**Auth endpoints are not included in this boilerplate.** Implement `POST /api/v1/auth/login` and `POST /api/v1/auth/register` when scaffolding your first resource. `JwtService` and `Authenticatable` are wired and ready.
 
 ---
 
@@ -205,6 +249,104 @@ end
 # Call from a controller:
 Users::CreateService.call(user_params)
 ```
+
+---
+
+## Authorization
+
+Pundit is configured with an `ApplicationPolicy` base that denies all actions by default.
+
+```ruby
+class PostPolicy < ApplicationPolicy
+  def index?  = true           # Anyone authenticated can list
+  def show?   = record.user == user
+  def create? = true
+  def update? = record.user == user
+  def destroy? = record.user == user
+
+  class Scope < ApplicationPolicy::Scope
+    def resolve = scope.where(user: user)
+  end
+end
+
+# In a controller:
+class Api::V1::PostsController < Api::V1::BaseController
+  def show
+    @post = Post.find(params[:id])
+    authorize @post
+    render json: PostSerializer.new(@post).serializable_hash
+  end
+
+  def index
+    @posts = policy_scope(Post)
+    render json: PostSerializer.new(@posts).serializable_hash
+  end
+end
+```
+
+See the [Pundit docs](https://github.com/varvet/pundit) for full options including scopes and headless policies.
+
+---
+
+## Pagination
+
+Pagy is configured with a default page size of 25 (max 100).
+
+```ruby
+class Api::V1::PostsController < Api::V1::BaseController
+  include Pagy::Backend
+
+  def index
+    @pagy, @posts = pagy(Post.all)
+    render json: {
+      data: PostSerializer.new(@posts).serializable_hash,
+      meta: pagy_metadata(@pagy)
+    }
+  end
+end
+```
+
+Pass `?page=2&limit=50` as query params. See [Pagy docs](https://ddnexus.github.io/pagy/) for cursor, keyset, and other strategies.
+
+---
+
+## Full-text Search
+
+`pg_search` is configured to use PostgreSQL's native `tsearch` with an English dictionary.
+
+```ruby
+class Post < ApplicationRecord
+  include PgSearch::Model
+
+  pg_search_scope :search_by_title_and_body,
+    against: [:title, :body],
+    using: { tsearch: { dictionary: "english" } }
+end
+
+# In a controller:
+Post.search_by_title_and_body(params[:q])
+```
+
+For multi-model search, use `PgSearch.multisearch`. See [pg_search docs](https://github.com/Casecommons/pg_search).
+
+---
+
+## Audit Trail
+
+PaperTrail records every create, update, and destroy for any model you opt in to.
+
+```ruby
+class Post < ApplicationRecord
+  has_paper_trail
+end
+
+# Inspect history:
+post.versions                        # All versions
+post.versions.last.reify            # Restore previous state
+PaperTrail::Version.where(item_type: "Post")
+```
+
+PaperTrail is installed but **not enabled globally** — add `has_paper_trail` only to models that need change history.
 
 ---
 
@@ -410,6 +552,13 @@ The Dockerfile is production-ready as-is. For orchestrated environments (Kuberne
 | Decision                         | Rationale                                                                                               |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **No Devise**                    | JWT auth is simpler for pure APIs. Devise adds session and cookie complexity that isn't needed.         |
+| **JWT at 15 min + refresh token** | Short-lived JWTs cannot be revoked; refresh tokens (30 days, rotated on each use) handle session longevity safely. |
+| **Refresh token in HttpOnly cookie** | Prevents JavaScript access to the refresh token — mitigates XSS token theft.                      |
+| **Family-based theft detection** | Reuse of a consumed refresh token revokes the entire token family, protecting users on token compromise. |
+| **Pundit for authorization**     | Policy objects keep authorization logic co-located with the resource and fully testable in isolation.   |
+| **Pagy for pagination**          | 40× faster than Kaminari/WillPaginate, zero monkey-patching, works at the DB level.                    |
+| **pg_search**                    | Full-text search using native PostgreSQL `tsvector` — no external search index needed.                  |
+| **PaperTrail (opt-in)**          | Audit trail without a global performance penalty — enable per model as needed.                          |
 | **Solid Queue over Sidekiq**     | Rails 8 native. Uses PostgreSQL — eliminates Redis as an operational dependency.                        |
 | **jsonapi-serializer**           | JSON:API spec compliance, explicit attribute declaration, faster than ActiveModelSerializers.           |
 | **Service objects**              | Keeps controllers thin. `ApplicationService.call()` pattern makes business logic testable in isolation. |
