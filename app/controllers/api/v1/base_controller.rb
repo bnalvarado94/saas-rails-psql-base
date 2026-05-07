@@ -8,7 +8,6 @@ module Api
       include ErrorHandler
       include Authenticatable
       include Pundit::Authorization
-      include Pagy::Backend
 
       after_action :verify_authorized, except: :index
       after_action :verify_policy_scoped, only: :index
@@ -23,14 +22,14 @@ module Api
 
       def paginate(scope, per_page: 25)
         limit = [ (params[:per_page] || per_page).to_i, 100 ].min
-        pagy, records = pagy(scope, limit: limit)
-        meta = {
+        pagy  = Pagy::Offset.new(count: scope.count, page: params[:page].to_i, limit: limit)
+        meta  = {
           current_page: pagy.page,
           per_page:     pagy.limit,
           total_pages:  pagy.pages,
           total_count:  pagy.count
         }
-        [ records, meta ]
+        [ pagy.records(scope), meta ]
       end
     end
   end
