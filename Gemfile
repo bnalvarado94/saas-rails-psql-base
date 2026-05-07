@@ -1,37 +1,83 @@
 source "https://rubygems.org"
 
-gem "rails", "~> 8.1.3"
-gem "pg", "~> 1.1"
-gem "puma", ">= 5.0"
-gem "bootsnap", require: false
-gem "tzinfo-data", platforms: %i[ windows jruby ]
-gem "strong_migrations"
-gem "solid_queue"
+# ─── Core ───────────────────────────────
+gem "rails", "~> 8.1.3"                       # Main web framework
+gem "pg", "~> 1.1"                             # PostgreSQL adapter
+gem "puma", ">= 5.0"                           # Puma web server
+gem "bootsnap", require: false                 # Speeds up boot by caching files
+gem "tzinfo-data", platforms: %i[ windows jruby ] # Timezone data for Windows/JRuby
+gem "strong_migrations"                        # Prevents dangerous migrations in production
+gem "solid_queue"                              # Active Job backend built on PostgreSQL (no Redis)
 
-# Security / middleware
-gem "rack-cors"
-gem "rack-attack"
+# ─── Security / Middleware ───────────────
+gem "rack-cors"                                # Handles CORS for APIs
+gem "rack-attack"                              # Rate limiting and request throttling
 
-# Auth
-gem "jwt"
-gem "bcrypt", "~> 3.1.7"
+# ─── Auth ───────────────────────────────
+gem "jwt"                                      # JSON Web Tokens for stateless authentication
+gem "bcrypt", "~> 3.1.7"                       # Secure password hashing
 
-# Serializers
-gem "jsonapi-serializer"
+# ─── Serializers ────────────────────────
+gem "jsonapi-serializer"                       # Fast and declarative JSON:API serialization
+
+# ─── Authorization ──────────────────────
+gem "pundit"                                   # Policy-based authorization (Policy Objects)
+
+# ─── Pagination ─────────────────────────
+gem "pagy"                                     # Lightweight and fast pagination
+
+# ─── Search ─────────────────────────────
+gem "pg_search"                                # Full-text search using native PostgreSQL features
+
+# ─── Business Logic ─────────────────────
+gem "interactor"                               # Encapsulates business logic in Service Objects
+gem "enumerize"                                # Enumerated attributes with I18n support
+gem "aasm"                                     # State machines for ActiveRecord models
+
+# ─── Auditing ───────────────────────────
+gem "paper_trail"                              # Change history and audit trail for ActiveRecord models
+
+# ─── File Uploads (optional) ────────────
+# gem "shrine"                                 # Uncomment if you need file uploads (alternative to ActiveStorage)
+
+# ─── OAuth (optional) ───────────────────
+# gem "doorkeeper"                             # Uncomment if you need an OAuth2 provider
+# gem "omniauth"                               # Uncomment if you need login with external providers (Google, GitHub, etc)
+# gem "omniauth-rails_csrf_protection"         # Uncomment if you need login with external providers (Google, GitHub, etc)
+
+group :development do
+  # ─── Environment ────────────────────────
+  gem "dotenv-rails"                           # Loads environment variables from .env
+
+  # ─── Email ──────────────────────────────
+  gem "letter_opener"                          # Opens emails in the browser instead of sending them
+end
 
 group :development, :test do
-  gem "rspec-rails"
-  gem "factory_bot_rails"
-  gem "faker"
-  gem "pry"
-  gem "debug", platforms: %i[ mri windows ]
-  gem "brakeman", require: false
-  gem "bundler-audit", require: false
-  gem "rubocop-rails-omakase", require: false
+  # ─── Testing Framework ──────────────────
+  gem "rspec-rails"                            # BDD testing framework for Rails
+  gem "factory_bot_rails"                      # Factories for creating test objects
+  gem "faker"                                  # Generates realistic fake data for tests
+
+  # ─── Debugging ──────────────────────────
+  gem "pry-rails"                              # Replaces IRB with Pry in the Rails console
+  gem "pry-byebug"                             # Breakpoints and step-through debugging with Pry
+  gem "debug", platforms: %i[ mri windows ]   # Standard Ruby debugger
+
+  # ─── Code Quality ───────────────────────
+  gem "brakeman", require: false               # Static security analysis for Rails
+  gem "bundler-audit", require: false          # Audits dependencies for known vulnerabilities
+  gem "rubocop-rails-omakase", require: false  # Omakase-style Ruby linter (DHH)
 end
 
 group :test do
-  gem "shoulda-matchers"
-  gem "database_cleaner-active_record"
-  gem "simplecov", require: false
+  # ─── Matchers & Cleanup ─────────────────
+  gem "shoulda-matchers"                       # One-liner matchers for models and controllers
+  gem "database_cleaner-active_record"         # Cleans the database between tests
+  gem "simplecov", require: false              # Test coverage reporting
+
+  # ─── Time & HTTP Mocking ────────────────
+  gem "timecop"                                # Freeze or travel through time in tests
+  gem "vcr"                                    # Records and replays HTTP interactions in tests
+  gem "webmock"                                # Intercepts and stubs HTTP requests in tests
 end

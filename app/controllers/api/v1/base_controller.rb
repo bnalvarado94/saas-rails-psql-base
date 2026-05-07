@@ -7,17 +7,30 @@ module Api
     class BaseController < ApplicationController
       include ErrorHandler
       include Authenticatable
+      include Pundit::Authorization
+      include Pagy::Backend
+
+      after_action :verify_authorized, except: :index
+      after_action :verify_policy_scoped, only: :index
+
+      rescue_from Pundit::NotAuthorizedError, with: :forbidden
 
       private
 
-      # Pagination helper — works with any ActiveRecord scope.
-      # Returns [records, pagination_meta] for consistent paginated responses.
-      # Uses simple offset pagination. Add kaminari or pagy for total_count/total_pages.
+      def forbidden
+        render json: { error: "Forbidden" }, status: :forbidden
+      end
+
       def paginate(scope, per_page: 25)
-        page = (params[:page] || 1).to_i.clamp(1, Float::INFINITY)
-        per = (params[:per_page] || per_page).to_i.clamp(1, 100)
-        offset = (page - 1) * per
-        [ scope.limit(per).offset(offset), { current_page: page, per_page: per } ]
+        limit = [ (params[:per_page] || per_page).to_i, 100 ].min
+        pagy, records = pagy(scope, limit: limit)
+        meta = {
+          current_page: pagy.page,
+          per_page:     pagy.limit,
+          total_pages:  pagy.pages,
+          total_count:  pagy.count
+        }
+        [ records, meta ]
       end
     end
   end
