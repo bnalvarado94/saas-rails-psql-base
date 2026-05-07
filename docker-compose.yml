@@ -39,9 +39,12 @@ services:
   web:
     build:
       context: .
+      target: builder  # Use builder stage so native gem compilation works (has build-essential)
       args:
         # Install ALL gems in dev so rspec/rubocop/etc. are available in the container
         BUNDLE_WITHOUT: ""
+    entrypoint: ["bin/docker-entrypoint"]
+    command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]
     volumes:
       - .:/app
       - bundle_data:/usr/local/bundle
@@ -67,6 +70,7 @@ services:
   worker:
     build:
       context: .
+      target: builder
       args:
         BUNDLE_WITHOUT: ""
     command: ["bundle", "exec", "rake", "solid_queue:start"]
@@ -87,6 +91,7 @@ services:
   test:
     build:
       context: .
+      target: builder
       args:
         BUNDLE_WITHOUT: ""
     command: ["bash", "-c", "bundle exec rails db:create db:schema:load && bundle exec rspec"]
