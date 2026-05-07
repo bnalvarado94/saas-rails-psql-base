@@ -30,6 +30,8 @@ module SaasRailsPsqlBase
     # Only loads a smaller set of middleware suitable for API only apps.
     config.api_only = true
 
+    config.middleware.use ActionDispatch::Cookies
+
     # To use UUIDs as primary keys, uncomment this block and enable the pgcrypto
     # extension in your initial migration: enable_extension "pgcrypto"
     # config.generators do |g|

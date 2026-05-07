@@ -2,8 +2,20 @@
 # Includes web server, background worker, and test runner.
 # For production, use the Dockerfile directly or a container orchestrator.
 #
-# Gems are pre-built into the image by the builder stage.
-# If you change the Gemfile, run: docker compose build
+# Gem installation — two supported workflows:
+#   1. Baked into the image (default): `docker compose build`
+#      Run this whenever you want a fully self-contained image or after major
+#      Gemfile changes that you want baked in permanently.
+#
+#   2. Installed at runtime into the named volume:
+#        docker compose run --rm web bundle install
+#      Gems land in the bundle_data volume mounted at /usr/local/bundle and
+#      persist across `docker compose run --rm ...` commands. Useful for quickly
+#      adding a gem without rebuilding the image.
+#
+# Both workflows coexist: the volume takes precedence over the image layer at
+# /usr/local/bundle, so a `bundle install` via workflow 2 will shadow the
+# image-baked gems for all services until the volume is removed.
 #
 # Dev builds pass BUNDLE_WITHOUT="" so all gems (including dev/test) are installed.
 
@@ -32,6 +44,7 @@ services:
         BUNDLE_WITHOUT: ""
     volumes:
       - .:/app
+      - bundle_data:/usr/local/bundle
     ports:
       - "3000:3000"
     depends_on:
@@ -59,6 +72,7 @@ services:
     command: ["bundle", "exec", "rake", "solid_queue:start"]
     volumes:
       - .:/app
+      - bundle_data:/usr/local/bundle
     depends_on:
       db:
         condition: service_healthy
@@ -75,18 +89,18 @@ services:
       context: .
       args:
         BUNDLE_WITHOUT: ""
-    command: ["bundle", "exec", "rspec"]
+    command: ["bash", "-c", "bundle exec rails db:create db:schema:load && bundle exec rspec"]
     profiles:
       - test
     volumes:
       - .:/app
+      - bundle_data:/usr/local/bundle
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}_test
-      RAILS_ENV: test
-      SECRET_KEY_BASE: test_secret_key_base_not_for_production
+    env_file:
+      - .env.test
 
 volumes:
   postgres_data:
+  bundle_data:  # Bundler gem cache — survives container teardown, shared across web/worker/test
