@@ -40,3 +40,13 @@
 
 # Ignore Claude Code project files.
 .claude/
+.gitnexus
+
+# Secrets
+.env
+.env.local
+.env.*.local
+# GitNexus (contiene paths locales)
+.gitnexus.yml
+# Logs temporales hawk-skills
+/tmp/hawk-*

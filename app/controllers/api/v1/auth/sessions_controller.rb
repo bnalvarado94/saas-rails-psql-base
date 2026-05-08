@@ -63,14 +63,9 @@ module Api
         def session_response(access_token, user)
           {
             access_token: access_token,
-            token_type: "Bearer",
-            expires_in: JwtService::DEFAULT_TTL.to_i,
-            user: {
-              id: user.id,
-              email: user.email,
-              first_name: user.first_name,
-              last_name: user.last_name
-            }
+            token_type:   "Bearer",
+            expires_in:   JwtService::DEFAULT_TTL.to_i,
+            user:         UserSerializer.serialize_user(user)
           }
         end
       end

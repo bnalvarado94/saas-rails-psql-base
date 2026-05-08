@@ -1,0 +1,36 @@
+# .agents/standards/index.yml
+#
+# Topic → standards file map.
+# Skills (plan-small, implement-plan-audited, fix-bug, etc.) read this file
+# first and then load only the files relevant to the task.
+#
+# Format: topic: file.md
+# One topic can point to multiple files separated by commas.
+#
+# INSTRUCTIONS:
+# - Add one topic per technical domain in the project
+# - Be specific: "rails-models" is better than "backend"
+# - Skills load files that match the task's paths/domain
+
+# ─── Already included (stack-agnostic) ───────────────────────────────────────
+api-design: api-design.md
+security: security.md
+
+# ─── Add according to project stack ──────────────────────────────────────────
+# Copy _TEMPLATE.md, fill it in, and uncomment the corresponding line.
+
+# Backend
+rails: rails.md
+authentication: authentication.md
+# database: database.md
+# background-jobs: background-jobs.md
+
+# Frontend
+# react: react.md
+# typescript: typescript.md
+# forms: forms.md
+
+# Project-specific
+# billing: billing.md
+# ai-integration: ai.md
+# testing: testing.md

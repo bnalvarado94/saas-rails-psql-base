@@ -6,6 +6,14 @@ module ErrorHandler
   extend ActiveSupport::Concern
 
   included do
+    rescue_from Auth::InvalidCredentialsError do |e|
+      render json: { error: e.message }, status: :unauthorized
+    end
+
+    rescue_from Auth::EmailNotConfirmedError do |e|
+      render json: { error: e.message }, status: :forbidden
+    end
+
     rescue_from ActiveRecord::RecordNotFound do |e|
       render json: { error: e.message }, status: :not_found
     end

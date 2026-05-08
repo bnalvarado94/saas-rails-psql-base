@@ -1,0 +1,22 @@
+# .agents/common-mistakes/index.yml
+#
+# Topic → common mistakes file map.
+# Skills read this file and load relevant errors for the task.
+# When fix-bug resolves a new bug, it adds an entry here.
+#
+# Format: topic: file.md
+# UPDATE every time a new error is discovered in the project.
+
+# --- By technology ---
+# rails: rails.md
+# react: react.md
+# typescript: typescript.md
+
+# --- By project domain ---
+# authentication: authentication.md
+# database: database.md
+# background-jobs: background-jobs.md
+
+# --- Cross-cutting ---
+# deployment: deployment.md
+# performance: performance.md
