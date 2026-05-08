@@ -11,7 +11,7 @@ module Auth
     def call
       user = find_user
       verify_password!(user)
-      # TODO: enforce confirmed_at once email verification flow exists
+      verify_confirmed!(user)
       issue_tokens(user)
     end
 
@@ -19,12 +19,18 @@ module Auth
 
     def find_user
       User.find_by(email: @email.to_s.strip.downcase) ||
-        raise(ActiveRecord::RecordNotFound, "Invalid email or password")
+        raise(InvalidCredentialsError, "Invalid email or password")
     end
 
     def verify_password!(user)
       unless user.authenticate(@password)
-        raise ActiveRecord::RecordNotFound, "Invalid email or password"
+        raise InvalidCredentialsError, "Invalid email or password"
+      end
+    end
+
+    def verify_confirmed!(user)
+      unless user.confirmed_at.present?
+        raise EmailNotConfirmedError, "Check your email to confirm your account"
       end
     end
 

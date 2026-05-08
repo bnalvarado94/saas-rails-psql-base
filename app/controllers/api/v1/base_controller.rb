@@ -9,8 +9,16 @@ module Api
       include Authenticatable
       include Pundit::Authorization
 
-      after_action :verify_authorized, except: :index
-      after_action :verify_policy_scoped, only: :index
+      # GOTCHA: Every non-index action in a subclass MUST call `authorize <record>`
+      # (or `skip_authorization` for public actions). Forgetting raises
+      # Pundit::AuthorizationNotPerformedError at runtime — it will NOT fail silently.
+      # See UsersController#show for the canonical pattern.
+      #
+      # NOTE: `if:` lambdas are used instead of `only:`/`except:` to avoid
+      # Rails 7.1's raise_on_missing_callback_actions blowing up on subcontrollers
+      # that don't define an index action.
+      after_action :verify_authorized,    unless: -> { action_name == "index" }
+      after_action :verify_policy_scoped, if:     -> { action_name == "index" }
 
       rescue_from Pundit::NotAuthorizedError, with: :forbidden
 

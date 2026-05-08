@@ -27,12 +27,14 @@ gem "pundit"                                   # Policy-based authorization (Pol
 gem "pagy"                                     # Lightweight and fast pagination
 
 # ─── Search ─────────────────────────────
-gem "pg_search"                                # Full-text search using native PostgreSQL features
+# gem "pg_search"                              # Uncomment when needed. Add `include PgSearch::Model`
+#                                              # to any model, then define pg_search_scope.
+#                                              # Also uncomment config/initializers/pg_search.rb.
 
 # ─── Business Logic ─────────────────────
-gem "interactor"                               # Encapsulates business logic in Service Objects
-gem "enumerize"                                # Enumerated attributes with I18n support
-gem "aasm"                                     # State machines for ActiveRecord models
+# gem "interactor"                             # Uncomment when needed. Service objects via Interactor::Organizer.
+# gem "enumerize"                              # Uncomment when needed. Enumerated attributes with I18n support.
+# gem "aasm"                                   # Uncomment when needed. State machines for ActiveRecord models.
 
 # ─── Auditing ───────────────────────────
 gem "paper_trail"                              # Change history and audit trail for ActiveRecord models

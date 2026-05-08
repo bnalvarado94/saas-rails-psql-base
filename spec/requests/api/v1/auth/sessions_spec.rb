@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Auth::Sessions", type: :request do
   let(:password) { "SecurePassword123!" }
-  let(:user)     { create(:user, password: password) }
+  let(:user)     { create(:user, :confirmed, password: password) }
 
   describe "POST /api/v1/auth/login" do
     let(:valid_params) { { email: user.email, password: password } }
@@ -36,17 +36,17 @@ RSpec.describe "Api::V1::Auth::Sessions", type: :request do
     end
 
     context "with invalid credentials" do
-      it "returns 404 for wrong password" do
+      it "returns 401 for wrong password" do
         post "/api/v1/auth/login", params: { email: user.email, password: "wrong" }
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         expect(json_response[:error]).to eq("Invalid email or password")
       end
 
-      it "returns 404 for unknown email" do
+      it "returns 401 for unknown email" do
         post "/api/v1/auth/login", params: { email: "nobody@example.com", password: password }
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         expect(json_response[:error]).to eq("Invalid email or password")
       end
 
@@ -64,6 +64,17 @@ RSpec.describe "Api::V1::Auth::Sessions", type: :request do
         post "/api/v1/auth/login", params: { password: password }
 
         expect(response).to have_http_status(:bad_request)
+      end
+    end
+
+    context "with an unconfirmed account" do
+      let(:unconfirmed_user) { create(:user, :unconfirmed, password: password) }
+
+      it "returns 403 with a clear message" do
+        post "/api/v1/auth/login", params: { email: unconfirmed_user.email, password: password }
+
+        expect(response).to have_http_status(:forbidden)
+        expect(json_response[:error]).to eq("Check your email to confirm your account")
       end
     end
   end
