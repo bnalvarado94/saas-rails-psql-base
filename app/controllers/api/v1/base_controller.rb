@@ -9,6 +9,8 @@ module Api
       include Authenticatable
       include Pundit::Authorization
 
+      around_action :scan_for_n_plus_one if Rails.env.development?
+
       # GOTCHA: Every non-index action in a subclass MUST call `authorize <record>`
       # (or `skip_authorization` for public actions). Forgetting raises
       # Pundit::AuthorizationNotPerformedError at runtime — it will NOT fail silently.
@@ -26,6 +28,13 @@ module Api
 
       def forbidden
         render json: { error: "Forbidden" }, status: :forbidden
+      end
+
+      def scan_for_n_plus_one
+        Prosopite.scan
+        yield
+      ensure
+        Prosopite.finish
       end
 
       def paginate(scope, per_page: 25)

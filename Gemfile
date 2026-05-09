@@ -70,6 +70,10 @@ group :development, :test do
   gem "brakeman", require: false               # Static security analysis for Rails
   gem "bundler-audit", require: false          # Audits dependencies for known vulnerabilities
   gem "rubocop-rails-omakase", require: false  # Omakase-style Ruby linter (DHH)
+
+  # ─── Performance ────────────────────────
+  gem "prosopite"                              # Detects N+1 queries; logs in dev, raises in test
+  gem "pg_query"                               # Required by prosopite for query fingerprinting
 end
 
 group :test do

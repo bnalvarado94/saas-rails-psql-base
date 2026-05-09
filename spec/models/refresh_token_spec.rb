@@ -109,7 +109,8 @@ RSpec.describe RefreshToken, type: :model do
 
       tokens.first.revoke_family!
 
-      tokens.each { |t| expect(t.reload.revoked_at).to be_present }
+      revoked_ats = RefreshToken.where(id: tokens.map(&:id)).pluck(:revoked_at)
+      expect(revoked_ats).to all(be_present)
     end
 
     it "does not affect tokens from other families" do
