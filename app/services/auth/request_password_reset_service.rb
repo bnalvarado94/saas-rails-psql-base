@@ -6,10 +6,15 @@ module Auth
 
     def call
       user = User.find_by(email: @email)
-      return unless user
 
-      raw_token = user.generate_reset_password_token!
-      UserMailer.reset_password_email(user, raw_token).deliver_later
+      # Always perform a constant-time-equivalent path to prevent email enumeration
+      # via response timing differences between existing and non-existing accounts.
+      if user
+        raw_token = user.generate_reset_password_token!
+        UserMailer.reset_password_email(user, raw_token).deliver_later
+      else
+        BCrypt::Password.create(SecureRandom.hex)
+      end
     end
   end
 end

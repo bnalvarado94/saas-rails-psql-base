@@ -55,7 +55,8 @@ class RefreshToken < ApplicationRecord
   end
 
   # Revokes all tokens in the same family — called on theft detection.
+  # Scoped to user_id as a defense-in-depth measure against family_id collisions.
   def revoke_family!
-    self.class.for_family(family_id).update_all(revoked_at: Time.current)
+    self.class.where(family_id: family_id, user_id: user_id).update_all(revoked_at: Time.current)
   end
 end

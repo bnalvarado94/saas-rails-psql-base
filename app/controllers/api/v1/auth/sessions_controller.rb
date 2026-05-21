@@ -51,13 +51,13 @@ module Api
             value: raw_token,
             httponly: true,
             secure: Rails.env.production?,
-            same_site: :lax,
+            same_site: :strict,
             expires: RefreshToken::EXPIRY.from_now
           }
         end
 
         def delete_refresh_cookie
-          cookies.delete(COOKIE_NAME, same_site: :lax, secure: Rails.env.production?)
+          cookies.delete(COOKIE_NAME, same_site: :strict, secure: Rails.env.production?)
         end
 
         def session_response(access_token, user)

@@ -21,6 +21,33 @@ class Rack::Attack
     end
   end
 
+  # Throttle registrations by IP (5 per hour — prevents account factory abuse)
+  throttle("registrations/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/register" && req.post?
+  end
+
+  # Throttle email confirmation attempts by IP (10 per hour)
+  throttle("confirmations/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/confirm" && req.post?
+  end
+
+  # Throttle password reset requests by IP (5 per hour)
+  throttle("password_reset/ip", limit: 5, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/password/reset" && req.post?
+  end
+
+  # Throttle password reset requests by email (3 per hour — prevents targeted abuse)
+  throttle("password_reset/email", limit: 3, period: 1.hour) do |req|
+    if req.path == "/api/v1/auth/password/reset" && req.post?
+      req.params.dig("email")&.downcase&.strip
+    end
+  end
+
+  # Throttle password reset confirmations by IP (10 per hour)
+  throttle("password_reset_confirm/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.path == "/api/v1/auth/password/reset/confirm" && req.patch?
+  end
+
   # Return rate limit headers so clients can self-regulate
   Rack::Attack.throttled_responder = lambda do |request|
     match_data = request.env["rack.attack.match_data"]
