@@ -14,7 +14,7 @@ gem "rack-cors"                                # Handles CORS for APIs
 gem "rack-attack"                              # Rate limiting and request throttling
 
 # ─── Auth ───────────────────────────────
-gem "jwt"                                      # JSON Web Tokens for stateless authentication
+gem "jwt", ">= 3.2.0"                          # JSON Web Tokens for stateless authentication
 gem "bcrypt", "~> 3.1.7"                       # Secure password hashing
 
 # ─── Serializers ────────────────────────
