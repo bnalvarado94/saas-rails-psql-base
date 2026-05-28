@@ -50,3 +50,14 @@
 .gitnexus.yml
 # Logs temporales hawk-skills
 /tmp/hawk-*
+
+# Secrets — nunca commitear
+.env
+.env.local
+.env.*.local
+# Claude Code — overrides locales
+.claude/settings.local.json
+# GitNexus — contiene paths locales
+.gitnexus.yml
+# Logs temporales hawk-skills
+/tmp/hawk-*

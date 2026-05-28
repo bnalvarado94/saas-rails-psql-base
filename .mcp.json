@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gitnexus": {
+      "command": "gitnexus",
+      "args": ["mcp"],
+      "description": "Code knowledge graph — impact analysis, route maps, execution flows"
+    }
+  }
+}
